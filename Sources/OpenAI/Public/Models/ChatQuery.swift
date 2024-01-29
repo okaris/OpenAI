@@ -23,10 +23,50 @@ public struct ResponseFormat: Codable, Equatable {
 public struct Chat: Codable, Equatable {
     public let role: Role
     /// The contents of the message. `content` is required for all messages except assistant messages with function calls.
-    public let content: String?
+    public let content: [ContentElement]?
     /// The name of the author of this message. `name` is required if role is `function`, and it should be the name of the function whose response is in the `content`. May contain a-z, A-Z, 0-9, and underscores, with a maximum length of 64 characters.
     public let name: String?
     public let functionCall: ChatFunctionCall?
+
+    
+    public enum ContentElement: Codable, Equatable {
+        case text(String)
+        case imageUrl(String)
+        
+        private enum CodingKeys: String, CodingKey {
+            case type, text, imageUrl = "image_url"
+        }
+        
+        private enum ContentType: String, Codable {
+            case text, imageUrl = "image_url"
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let type = try container.decode(ContentType.self, forKey: .type)
+            
+            switch type {
+            case .text:
+                let text = try container.decode(String.self, forKey: .text)
+                self = .text(text)
+            case .imageUrl:
+                let imageUrl = try container.decode(String.self, forKey: .imageUrl)
+                self = .imageUrl(imageUrl)
+            }
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            switch self {
+            case .text(let text):
+                try container.encode(ContentType.text, forKey: .type)
+                try container.encode(text, forKey: .text)
+            case .imageUrl(let imageUrl):
+                try container.encode(ContentType.imageUrl, forKey: .type)
+                try container.encode(imageUrl, forKey: .imageUrl)
+            }
+        }
+    }
     
     public enum Role: String, Codable, Equatable {
         case system
