@@ -82,7 +82,7 @@ public struct Chat: Codable, Equatable {
         case functionCall = "function_call"
     }
     
-    public init(role: Role, content: String? = nil, name: String? = nil, functionCall: ChatFunctionCall? = nil) {
+    public init(role: Role, content: [ContentElement]? = nil, name: String? = nil, functionCall: ChatFunctionCall? = nil) {
         self.role = role
         self.content = content
         self.name = name
